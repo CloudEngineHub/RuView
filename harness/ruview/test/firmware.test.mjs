@@ -10,6 +10,16 @@ import { runTool } from '../src/tools.js';
 
 const sha = (b) => createHash('sha256').update(b).digest('hex');
 
+test('boot evidence requires positive CSI callbacks and recognizes C5 firmware', () => {
+  for (const text of ['csi_collector: initialized', 'CSI cb #0: len=128']) {
+    assert.equal(summarizeBootLog(text).hardwareValidated, false);
+    assert.equal(summarizeBootLog(text).csiCallbacks, 0);
+  }
+  const result = summarizeBootLog('ESP32-C5 CSI Node (ADR-018 / ADR-110) v0.8.17\nCSI cb #1: len=128');
+  assert.equal(result.hardwareValidated, true);
+  assert.equal(result.firmwareVersion, '0.8.17');
+});
+
 function makeBundle({ otadata = true, sums = true, tamper = false, extra = {} } = {}) {
   const dir = mkdtempSync(join(tmpdir(), 'ruview-fw-'));
   const files = { 'bootloader.bin': 'BOOT', 'partition-table.bin': 'PT', 'esp32-csi-node.bin': 'APP', ...(otadata ? { 'ota_data_initial.bin': 'OTA' } : {}), ...extra };
@@ -22,7 +32,7 @@ function makeBundle({ otadata = true, sums = true, tamper = false, extra = {} } 
 }
 
 /** Fake hardware: records every esptool/python invocation. */
-function fakeDeps({ chip = 'ESP32-S3', toolVersion = '5.6.0', flashSize = '8MB', flashOk = true, bootLog = 'I (123) csi_collector: CSI cb\nMGMT+DATA\n' } = {}) {
+function fakeDeps({ chip = 'ESP32-S3', toolVersion = '5.6.0', flashSize = '8MB', flashOk = true, bootLog = 'I (123) csi_collector: CSI cb #1: len=128\nMGMT+DATA\n' } = {}) {
   const calls = [];
   return {
     calls,

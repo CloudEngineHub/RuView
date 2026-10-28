@@ -144,9 +144,9 @@ export function parseChip(output) {
 /** Summarize a captured serial boot log into hardware evidence. */
 export function summarizeBootLog(text) {
   const lines = String(text).split(/\r?\n/);
-  const csi = lines.filter((l) => /CSI cb|csi_collector/.test(l)).length;
+  const csi = lines.filter((l) => /\bCSI cb #[1-9]\d*\b/.test(l)).length;
   const panic = lines.some((l) => /Guru Meditation|abort\(\) was called|Backtrace:/.test(l));
-  const version = (/(?:RuView|esp32-csi-node)[^\n]*?v?(\d+\.\d+\.\d+)/i.exec(text) || [])[1] || null;
+  const version = (/(?:RuView|esp32-csi-node|ESP32(?:-[A-Z0-9]+)? CSI Node)[^\n]*?v?(\d+\.\d+\.\d+)/i.exec(text) || [])[1] || null;
   return {
     lines: lines.filter(Boolean).length,
     csiCallbacks: csi,

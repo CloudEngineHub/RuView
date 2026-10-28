@@ -11,6 +11,13 @@ against a baseline — that rule is enforced in code (`ruview_claim_check`).
 
 ## Quick start
 
+The source candidate adds `--variant c5` for ESP32-C5 bundles. It verifies
+checksums and the attached chip before writing, and uses C5's `0x2000`
+bootloader address rather than S3/C6's `0x0`. C5 writes require esptool >=5.3
+for corrected security-layout handling; use an isolated active Python environment.
+This does not qualify C5 hardware:
+capture a real boot and CSI runtime log before claiming a successful install.
+
 ```bash
 npx @ruvnet/ruview                       # onboard — pick a setup path
 npx @ruvnet/ruview claim-check --file REPORT.md   # the honesty guardrail (non-zero exit on untagged claims)

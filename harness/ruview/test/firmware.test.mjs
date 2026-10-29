@@ -18,6 +18,11 @@ test('boot evidence requires positive CSI callbacks and recognizes C5 firmware',
   const result = summarizeBootLog('ESP32-C5 CSI Node (ADR-018 / ADR-110) v0.8.17\nCSI cb #1: len=128');
   assert.equal(result.hardwareValidated, true);
   assert.equal(result.firmwareVersion, '0.8.17');
+  for (const failure of ['SPI flash busy detected(0x0f)', 'rst:0x7 (TG0_WDT_HPSYS)']) {
+    const broken = summarizeBootLog(`CSI cb #1: len=106\n${failure}`);
+    assert.equal(broken.panic, true);
+    assert.equal(broken.hardwareValidated, false);
+  }
 });
 
 function makeBundle({ otadata = true, sums = true, tamper = false, extra = {} } = {}) {

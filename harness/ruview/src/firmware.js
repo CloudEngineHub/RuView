@@ -145,7 +145,7 @@ export function parseChip(output) {
 export function summarizeBootLog(text) {
   const lines = String(text).split(/\r?\n/);
   const csi = lines.filter((l) => /\bCSI cb #[1-9]\d*\b/.test(l)).length;
-  const panic = lines.some((l) => /Guru Meditation|abort\(\) was called|Backtrace:/.test(l));
+  const panic = lines.some((l) => /Guru Meditation|abort\(\) was called|Backtrace:|SPI flash busy detected|TG[01]_WDT/.test(l));
   const version = (/(?:RuView|esp32-csi-node|ESP32(?:-[A-Z0-9]+)? CSI Node)[^\n]*?v?(\d+\.\d+\.\d+)/i.exec(text) || [])[1] || null;
   return {
     lines: lines.filter(Boolean).length,

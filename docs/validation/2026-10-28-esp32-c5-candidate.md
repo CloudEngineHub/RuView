@@ -1,11 +1,12 @@
 # ESP32-C5 candidate preparation, 2026-10-28
 
 Status, updated 2026-10-29: software candidate prepared; **not installed or
-physically qualified**. The no-ROM-response problem described below is resolved.
+physically qualified** at initial identification. The no-ROM-response problem described below is resolved.
 esptool 5.6.0 identified production ESP32-C5HR8 revision 1.2, 8 MB flash and
 8 MB embedded PSRAM. Secure boot and flash encryption were disabled.
 These are identification measurements, not proof of firmware operation.
-No flash writes or release publication have been performed.
+Subsequent installation and runtime findings are recorded below. No release
+publication has been performed.
 
 Track remaining qualification in [issue #2388](https://github.com/ruvnet/RuView/issues/2388).
 The [public setup checklist](https://gist.github.com/ruvnet/bacfc5ac6b4feed7cfc1f76c03d12f4c)
@@ -84,6 +85,29 @@ After the operator's physical intervention, the 2026-10-29 retry succeeded.
 The chip, flash and security-state probes above all completed successfully.
 
 ## Physical qualification still required
+
+### Installed-image failure and correction, 2026-10-29
+
+The full 8 MB original flash was preserved privately. Reading at 460800 and
+230400 baud failed with corrupt serial data; the complete read at 115200 baud
+succeeded, and a separate 64 KiB sample readback matched. No backup, credentials,
+device identifiers or raw CSI are committed here.
+
+The exact C5 bundle from successful firmware CI run
+[40904823542](https://github.com/ruvnet/RuView/actions/runs/40904823542)
+passed checksums and embedded version/chip checks, installed, and booted as
+0.8.17. Provisioning used private existing WiFi state and a dedicated local
+test sink. **MEASURED failed baseline:** a 60.032-second run received three
+valid raw CSI packets and no malformed packets, then repeated `TG0_WDT_HPSYS`
+resets with `SPI flash busy detected`. This is not a successful transport run.
+
+The legacy mmWave probe routed UART1 onto GPIO17/18 during startup. Espressif
+reserves [GPIO16-22 for C5 flash/PSRAM](https://docs.espressif.com/projects/esp-idf/en/v6.0.2/esp32c5/api-reference/peripherals/gpio.html).
+The correction skips unconfigured C5 probes and rejects memory-bus, console,
+out-of-range and duplicate sensor pins before UART installation. Host tests
+exercise the pin guard. Flash-log qualification also rejects watchdog and
+flash-busy evidence even when earlier callbacks were present. The board was
+held in download mode while preparing the corrected image.
 
 The next step is operator confirmation of the board model and manual BOOT/RESET
 entry into ROM download mode. After successful chip, security-state and flash

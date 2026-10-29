@@ -40,6 +40,11 @@ unless the board schematic is checked and `C5_STATUS_LED_GPIO` is set.
 Association is explicitly 2.4 GHz; the C5 radio's 5 GHz capability is not yet
 qualified by this profile.
 
+C5 skips automatic mmWave probing. The legacy GPIO17/18 pair overlaps the
+C5 flash/PSRAM bus and can cause watchdog resets with `SPI flash busy`.
+An explicit sensor pin assignment must avoid GPIO16-22, the console pins,
+and board-specific connections. The CSI-only baseline needs no sensor wiring.
+
 **Do not reuse the S3/C6 bootloader address.** C5's ROM boots from `0x2000`.
 The other release addresses remain `0x8000` (partition table), `0xf000`
 (OTA data), and `0x20000` (application). Prefer the generated IDF `flash_args`

@@ -412,6 +412,8 @@ The C5 profile is headless: 2.4 GHz association, 240 MHz application CPU,
 8 Hz edge DSP and a 4 MB OTA layout. Use the `c5` variant, ESP-IDF 6.0.2
 for the reproducible build, and esptool 5.3 or newer. This profile does not
 enable 5 GHz or PSRAM. No C5 speedup or sensing-accuracy claim is established.
+C5 also skips default mmWave probing: S3's GPIO17/18 sensor pair conflicts
+with C5 flash/PSRAM. Do not reuse S3 sensor pin assignments on C5.
 
 Identify the exact board and production chip, confirm at least 4 MB flash,
 and save a private full-flash backup before installation. C5's bootloader

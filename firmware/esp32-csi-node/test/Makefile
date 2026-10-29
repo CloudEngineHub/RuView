@@ -194,7 +194,7 @@ run_self_ping: test_self_ping
 	./test_self_ping
 
 test_mmwave_pins: test_mmwave_pins.c $(MAIN_DIR)/mmwave_pins.h
-	$(CC) -std=c11 -Wall -Wextra -Werror -I$(MAIN_DIR) $< -o $@
+	cc -std=c11 -Wall -Wextra -Werror -I$(MAIN_DIR) $< -o $@
 
 .PHONY: run_mmwave_pins
 run_mmwave_pins: test_mmwave_pins

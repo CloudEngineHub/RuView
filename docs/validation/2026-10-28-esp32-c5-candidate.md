@@ -1,9 +1,15 @@
 # ESP32-C5 candidate preparation, 2026-10-28
 
-Status: software candidate prepared; **not installed or physically qualified**.
-The attached device is reported by the operator as C5 on COM8, but its silicon
-identity has not been read successfully. No flash writes or release publication
-were performed during this preparation.
+Status, updated 2026-10-29: software candidate prepared; **not installed or
+physically qualified**. The no-ROM-response problem described below is resolved.
+esptool 5.6.0 identified production ESP32-C5HR8 revision 1.2, 8 MB flash and
+8 MB embedded PSRAM. Secure boot and flash encryption were disabled.
+These are identification measurements, not proof of firmware operation.
+No flash writes or release publication have been performed.
+
+Track remaining qualification in [issue #2388](https://github.com/ruvnet/RuView/issues/2388).
+The [public setup checklist](https://gist.github.com/ruvnet/bacfc5ac6b4feed7cfc1f76c03d12f4c)
+contains no credentials, device identifiers or raw captures.
 
 ## Candidate configuration
 
@@ -50,7 +56,7 @@ not a fresh matched hardware benchmark. Application CPUs exclude LP cores.
 | Current CSI profile band | 2.4 GHz | 2.4 GHz | 2.4 GHz; 5 GHz not qualified |
 | Default edge DSP configuration | 20 Hz | 8 Hz | 8 Hz conservative baseline |
 | Bootloader flash address | `0x0` | `0x0` | `0x2000` |
-| Live measurement in this session | Not attached | Not attached | Unavailable: no ROM response |
+| Live measurement in this session | Not attached | Not attached | Chip/flash identification only; runtime pending |
 
 Sources: [ADR-110](../adr/ADR-110-esp32-c6-firmware-extension.md), the target
 sdkconfig overlays and Kconfig, and Espressif's
@@ -68,12 +74,16 @@ AP conditions. They were not repeated
 for this C5 session and do not establish a C5 speedup, sensing accuracy, or
 long-run reliability. No raw CSI or biometric values are included here.
 
-## Physical qualification still required
+## Initial connection failure and recovery
 
 COM8 enumerates as a CP210x USB-to-UART bridge. esptool 5.1.0 received no ROM
 response, including with a 500 ms boot-strap hold. A passive 115200-baud read
 received zero bytes. An isolated esptool 5.6.0 installation also received no
 ROM response. Driver enumeration alone does not identify the connected chip.
+After the operator's physical intervention, the 2026-10-29 retry succeeded.
+The chip, flash and security-state probes above all completed successfully.
+
+## Physical qualification still required
 
 The next step is operator confirmation of the board model and manual BOOT/RESET
 entry into ROM download mode. After successful chip, security-state and flash

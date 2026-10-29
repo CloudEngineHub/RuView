@@ -414,6 +414,10 @@ for the reproducible build, and esptool 5.3 or newer. This profile does not
 enable 5 GHz or PSRAM. No C5 speedup or sensing-accuracy claim is established.
 C5 also skips default mmWave probing: S3's GPIO17/18 sensor pair conflicts
 with C5 flash/PSRAM. Do not reuse S3 sensor pin assignments on C5.
+Real-board tests confirmed boot and decoded CSI transport, but the tested AP
+did not consistently sustain the 20 packets/s acceptance target, including
+with additional traffic. Check cadence in your deployment; a successful install alone
+does not qualify sensing accuracy or long-run reliability.
 
 Identify the exact board and production chip, confirm at least 4 MB flash,
 and save a private full-flash backup before installation. C5's bootloader

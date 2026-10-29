@@ -75,7 +75,7 @@ const CAPABILITIES = Object.freeze([
     topics: ['hardware', 'sensing', 'deployment'],
     status: 'hardware-dependent',
     evidence: 'REPOSITORY',
-    summary: 'ESP32-S3 is the production CSI target, C6 is a research target, and C5 is an experimental headless candidate without physical qualification. Firmware covers CSI streaming, provisioning, edge processing, and optional sensing modules.',
+    summary: 'ESP32-S3 is the production CSI target, C6 is a research target, and C5 is experimental with bounded real-board boot/CSI transport evidence and AP-dependent cadence. This does not qualify sensing accuracy or long-run reliability. Firmware covers CSI streaming, provisioning, edge processing, and optional sensing modules.',
     sources: [
       'firmware/esp32-csi-node/README.md',
       'docs/adr/ADR-028-esp32-capability-audit.md',

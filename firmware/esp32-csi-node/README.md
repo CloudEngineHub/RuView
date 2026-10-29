@@ -21,12 +21,23 @@ This firmware captures WiFi Channel State Information (CSI) from an ESP32-S3 (pr
 
 ## ESP32-C5 candidate: installation and qualification
 
-The source checkout adds an experimental ESP32-C5 headless target. Physical
-C5 qualification is pending; a successful build does not establish hardware
-support or sensing accuracy. The existing published release is still 0.8.16.
+The source checkout adds an experimental ESP32-C5 headless target. Bounded
+real-board boot and CSI transport checks are recorded below; they do not
+establish sensing accuracy, consistent cadence or long-run reliability.
+See the [firmware releases](https://github.com/ruvnet/RuView/releases) for
+published bundles. C5 remains experimental: the tested AP setup produced
+variable cadence, including runs below the 20 packets/s acceptance target.
+Additional traffic did not consistently restore that target.
 
 Use ESP-IDF 6.0.2 (the CI lane; minimum 5.5.2), esptool >=5.3 for its corrected
 C5 security layouts, and a separate build directory:
+
+In an isolated Python environment, the measured setup used esptool 5.6.0
+and `esp-idf-nvs-partition-gen` 0.3.0. The latter is required by `provision.py`:
+
+```sh
+python -m pip install esptool==5.6.0 esp-idf-nvs-partition-gen==0.3.0
+```
 
 ```sh
 cd firmware/esp32-csi-node
@@ -59,7 +70,7 @@ CI verifies both the embedded chip ID and the generated flash plan before
 packaging them. Never substitute an S3 or C6 application.
 
 See the [C5 comparison and qualification record](../../docs/validation/2026-10-28-esp32-c5-candidate.md)
-for completed software checks and the remaining physical-board gate.
+for software checks, measured transport runs and remaining qualification limits.
 
 ## Firmware 0.8.16 prerelease: conservative mmWave identification
 

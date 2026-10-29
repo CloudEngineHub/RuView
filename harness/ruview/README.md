@@ -15,8 +15,12 @@ The source candidate adds `--variant c5` for ESP32-C5 bundles. It verifies
 checksums and the attached chip before writing, and uses C5's `0x2000`
 bootloader address rather than S3/C6's `0x0`. C5 writes require esptool >=5.3
 for corrected security-layout handling; use an isolated active Python environment.
-This does not qualify C5 hardware:
-capture a real boot and CSI runtime log before claiming a successful install.
+The [C5 record](../../docs/validation/2026-10-28-esp32-c5-candidate.md) contains
+bounded real-board boot and CSI evidence, including AP-dependent cadence limits.
+Capture a real boot and sustained CSI run for each installation. Both flash
+validation and the SDK monitor reject watchdog/flash-busy evidence even if
+initial CSI callbacks were present. C5 skips unconfigured mmWave probing to
+avoid assigning the S3 sensor pins onto C5's flash/PSRAM bus.
 
 ```bash
 npx @ruvnet/ruview                       # onboard — pick a setup path

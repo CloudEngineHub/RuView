@@ -1,12 +1,14 @@
 # ESP32-C5 candidate preparation, 2026-10-28
 
-Status, updated 2026-10-29: software candidate prepared; **not installed or
-physically qualified** at initial identification. The no-ROM-response problem described below is resolved.
+Status, updated 2026-10-29: **installed with bounded real-board boot and CSI
+transport evidence; experimental, with AP-dependent cadence**. The initial
+no-ROM-response problem and the startup pin conflict described below are resolved.
 esptool 5.6.0 identified production ESP32-C5HR8 revision 1.2, 8 MB flash and
 8 MB embedded PSRAM. Secure boot and flash encryption were disabled.
 These are identification measurements, not proof of firmware operation.
-Subsequent installation and runtime findings are recorded below. No release
-publication has been performed.
+Subsequent installation and runtime findings are recorded below. See the
+[release page](https://github.com/ruvnet/RuView/releases/tag/v0.8.17-esp32)
+for publication status; this record was prepared before publication.
 
 Track remaining qualification in [issue #2388](https://github.com/ruvnet/RuView/issues/2388).
 The [public setup checklist](https://gist.github.com/ruvnet/bacfc5ac6b4feed7cfc1f76c03d12f4c)
@@ -43,8 +45,8 @@ python test/test_delivery_contract.py --built-app build-c5/esp32-csi-node.bin \
 
 Use the `espressif/idf:v6.0.2` build environment. The build output is software
 evidence only. Host firmware contracts and the harness functional/security
-tests passed locally; hosted CI and physical qualification remain required
-before release.
+tests passed locally. Consult the linked PR for final hosted checks and the
+physical findings below for the actual limits of the hardware evidence.
 
 ## Comparison with previous ESP32 work
 
@@ -57,7 +59,7 @@ not a fresh matched hardware benchmark. Application CPUs exclude LP cores.
 | Current CSI profile band | 2.4 GHz | 2.4 GHz | 2.4 GHz; 5 GHz not qualified |
 | Default edge DSP configuration | 20 Hz | 8 Hz | 8 Hz conservative baseline |
 | Bootloader flash address | `0x0` | `0x0` | `0x2000` |
-| Live measurement in this session | Not attached | Not attached | Chip/flash identification only; runtime pending |
+| Live measurement in this session | Not attached | Not attached | Real boot and decoded CSI; bounded samples below |
 
 Sources: [ADR-110](../adr/ADR-110-esp32-c6-firmware-extension.md), the target
 sdkconfig overlays and Kconfig, and Espressif's
@@ -84,7 +86,7 @@ ROM response. Driver enumeration alone does not identify the connected chip.
 After the operator's physical intervention, the 2026-10-29 retry succeeded.
 The chip, flash and security-state probes above all completed successfully.
 
-## Physical qualification still required
+## Physical findings and bounded qualification
 
 ### Installed-image failure and correction, 2026-10-29
 
@@ -109,11 +111,61 @@ exercise the pin guard. Flash-log qualification also rejects watchdog and
 flash-busy evidence even when earlier callbacks were present. The board was
 held in download mode while preparing the corrected image.
 
-The next step is operator confirmation of the board model and manual BOOT/RESET
-entry into ROM download mode. After successful chip, security-state and flash
-identification: preserve a private full-flash backup, install the matching
-image, provision without exposing credentials, and capture a real boot and
-sustained CSI transport run. Compare baseline and tuned C5 settings under the
-same traffic and RF conditions before selecting higher DSP rates or enabling
-5 GHz. Do not claim installation, optimization gains, or hardware qualification
-until that evidence exists.
+### Corrected firmware and transport measurements
+
+The corrected local application was 1,101,424 bytes. Firmware 0.8.17 booted
+on the real C5, joined WiFi and continued CSI callbacks with no captured
+watchdog, flash-busy error or disconnect in fresh 60-second boot captures.
+The public SDK serial monitor also returned success on COM8.
+
+**MEASURED bounded transport samples, same C5 and AP:**
+
+| Condition | Window | Raw CSI packets | Raw packets/s | Malformed raw packets |
+|---|---:|---:|---:|---:|
+| Corrected firmware, initial test sink (includes intentional reset) | 120.026 s | 2,648 | 22.062 | 0 |
+| Steady test sink, no external stimulus | 60.001 s | 1,763 | 29.383 | 0 |
+| Test sink, 50 Hz small unicast stimulus for 59 s | 60.001 s | 1,766 | 29.433 | 0 |
+| Normal port 5005, includes provisioning/startup and intentional reset | 120.222 s | 1,624 | 13.508 | 0 |
+| Production SDK receiver on port 5005, steady | 60 s | 754 | 12.57 | 0 |
+| Port 5005, 50 Hz small unicast stimulus for 59 s | 60.121 s | 1,050 | 17.465 | 0 |
+| Port 5005, 100 Hz small unicast stimulus for 59 s | 60.052 s | 1,010 | 16.819 | 0 |
+| Port 5005, 50 Hz 1,200-byte unicast stimulus for 59 s | 60.240 s | 1,008 | 16.733 | 0 |
+
+The production receiver decoded all 971 received packets in its sample,
+including CSI, feature state, vitals/features and sync; it reported no unknown
+or malformed packets. All raw CSI shapes in these samples had one antenna
+and 53 subcarriers. No raw I/Q, inferred vital values or network identifiers
+are published here. Sequence discontinuities are not a standalone network-loss
+measurement: sequence numbers are assigned before the firmware's UDP rate gate.
+The initial reset-spanning window must not be used for a sequence-loss claim.
+
+These are sequential observations, not controlled accuracy or comparative
+CPU benchmarks. RF traffic was not held constant. Extra traffic produced no
+consistent improvement, so no continuous host stimulus or higher DSP rate was
+selected. The baseline stays at 8 Hz edge DSP and 2.4 GHz. The normal target
+port was restored to 5005. **The tested AP did not consistently meet the
+20 raw packets/s acceptance target; C5 remains experimental.** Long-run
+reliability, other board form factors, 5 GHz, PSRAM and sensing accuracy remain
+unqualified. The exact board form factor was requested but not confirmed;
+the generic profile has no LED or default sensor pin assignment.
+
+Reproduce receiver and serial checks from the repository root (use your port
+and sink settings; do not run two listeners on the same UDP port):
+
+```sh
+node harness/ruview/bin/cli.js monitor --port COM8 --seconds 60
+node harness/ruview/bin/cli.js esp32 --udp-port 5005 --seconds 60 --json
+```
+
+Keep full receiver output private: it can include network identifiers and
+experimental inferred vital values. For stimulus experiments, the host sent
+UDP datagrams only to the node's private LAN address, port 9, bounded to
+59 seconds at the stated rate. This is not a recommendation to run continuous
+traffic. Final publication status and follow-up measurements belong to the
+linked release and tracking issue.
+
+Remaining work includes identifying the exact board form factor, achieving a
+repeatable 20 packets/s profile on this AP, and longer matched-condition runs.
+No higher DSP rate or 5 GHz mode was selected. The successful install and
+bounded transport evidence do not establish a general performance gain,
+sensing accuracy or broader hardware qualification.
